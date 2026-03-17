@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modelos atomicos</title>
+  <style>
+    :root {
+      --forest: #234b2d;
+      --forest-soft: #2f6a3e;
+      --oak: #4d3624;
+      --oak-soft: #70513a;
+      --cream: #efe5d4;
+      --sand: #d7c3a3;
+      --ink: #1f1711;
+      --white: #fffdf9;
+      --shadow: 0 16px 38px rgba(30, 21, 13, 0.18);
+      --radius: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Book Antiqua", "Palatino Linotype", Georgia, serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.32), transparent 30%),
+        linear-gradient(135deg, #e8dec8 0%, #d9c5a4 48%, #cdb18c 100%);
+      min-height: 100vh;
+    }
+
+    .welcome-strip {
+      position: relative;
+      padding: 1.2rem 1.4rem;
+      background:
+        linear-gradient(135deg, rgba(24, 54, 33, 0.96), rgba(77, 54, 36, 0.94)),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.08), transparent);
+      color: var(--white);
+      overflow: hidden;
+      box-shadow: 0 10px 24px rgba(30, 21, 13, 0.16);
+    }
+
+    .welcome-strip::before,
+    .welcome-strip::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      pointer-events: none;
+    }
+
+    .welcome-strip::before {
+      width: 160px;
+      height: 160px;
+      top: -70px;
+      right: -40px;
+    }
+
+    .welcome-strip::after {
+      width: 120px;
+      height: 120px;
+      bottom: -50px;
+      left: -20px;
+    }
+
+    .welcome-inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.8rem 1.2rem;
+      max-width: 1350px;
+      margin: 0 auto;
+    }
+
+    .welcome-label {
+      margin: 0;
+      font-size: 0.92rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #eadfcf;
+    }
+
+    .welcome-word {
+      margin: 0.2rem 0 0;
+      font-size: clamp(2rem, 4.5vw, 3.4rem);
+      font-weight: bold;
+      min-height: 1.25em;
+      letter-spacing: 0.04em;
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+
+    .welcome-word.changing {
+      opacity: 0;
+      transform: translateY(12px) scale(0.98);
+    }
+
+    .welcome-caption {
+      margin: 0;
+      max-width: 460px;
+      text-align: right;
+      color: #f3ebde;
+      line-height: 1.55;
+      font-size: 0.98rem;
+    }
+
+    .layout {
+      display: flex;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    .sidebar {
+      width: 310px;
+      background: linear-gradient(180deg, var(--oak) 0%, #3d291b 100%);
+      color: var(--white);
+      padding: 1.5rem 1rem;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      transition: transform 0.3s ease, width 0.3s ease;
+      z-index: 10;
+    }
+
+    .sidebar.collapsed {
+      width: 92px;
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 1.4rem;
+    }
+
+    .sidebar-title {
+      margin: 0;
+      font-size: 1.6rem;
+      line-height: 1.1;
+    }
+
+    .sidebar-subtitle {
+      margin: 0.35rem 0 0;
+      color: #eadbc5;
+      font-size: 0.92rem;
+    }
+
+    .toggle-btn {
+      border: none;
+      background: rgba(255, 255, 255, 0.14);
+      color: var(--white);
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.24);
+      transform: translateY(-1px);
+    }
+
+    .sidebar.collapsed .sidebar-copy,
+    .sidebar.collapsed .menu-text,
+    .sidebar.collapsed .sidebar-note {
+      display: none;
+    }
+
+    .sidebar-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+
+    .menu-button {
+      width: 100%;
+      border: none;
+      background: rgba(255, 248, 240, 0.1);
+      color: var(--white);
+      padding: 0.9rem 1rem;
+      border-radius: 16px;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      transition: background 0.2s ease, transform 0.2s ease;
+      font: inherit;
+    }
+
+    .menu-button:hover,
+    .menu-button.active {
+      background: rgba(255, 248, 240, 0.23);
+      transform: translateX(3px);
+    }
+
+    .menu-index {
+      min-width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 255, 255, 0.15);
+      font-size: 0.95rem;
+      font-weight: bold;
+    }
+
+    .sidebar-note {
+      margin-top: 1.3rem;
+      padding: 0.95rem 1rem;
+      background: rgba(255, 248, 240, 0.09);
+      border-radius: 16px;
+      color: #f0e3cf;
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+
+    .content {
+      flex: 1;
+      padding: 2rem 2.2rem 1.5rem;
+    }
+
+    .hero {
+      background:
+        linear-gradient(135deg, rgba(35, 75, 45, 0.95), rgba(47, 106, 62, 0.86)),
+        linear-gradient(45deg, rgba(255, 255, 255, 0.08), transparent);
+      color: var(--white);
+      border-radius: 28px;
+      padding: 2rem;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -70px -70px auto;
+      width: 220px;
+      height: 220px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.22), transparent 68%);
+      border-radius: 50%;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(2.2rem, 4vw, 3.5rem);
+      letter-spacing: 0.02em;
+    }
+
+    .hero p {
+      max-width: 760px;
+      margin: 0.85rem 0 0;
+      line-height: 1.6;
+      font-size: 1.05rem;
+      color: #f4ebdf;
+    }
+
+    .section {
+      margin-top: 1.7rem;
+      background: rgba(255, 253, 249, 0.85);
+      backdrop-filter: blur(8px);
+      border-radius: 24px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .section h2 {
+      margin-top: 0;
+      margin-bottom: 0.45rem;
+      color: var(--forest);
+      font-size: 1.8rem;
+    }
+
+    .section-intro {
+      margin: 0 0 1.4rem;
+      line-height: 1.55;
+      color: #433428;
+    }
+
+    .timeline-wrap {
+      overflow-x: auto;
+      padding-bottom: 0.7rem;
+    }
+
+    .timeline {
+      min-width: 920px;
+      padding: 4rem 1rem 1rem;
+      position: relative;
+    }
+
+    .timeline::before {
+      content: "";
+      position: absolute;
+      top: 86px;
+      left: 70px;
+      right: 70px;
+      height: 8px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--oak) 0%, var(--forest) 100%);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.12);
+    }
+
+    .timeline-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .timeline-item {
+      position: relative;
+      text-align: center;
+      padding-top: 0.5rem;
+    }
+
+    .timeline-dot {
+      width: 28px;
+      height: 28px;
+      margin: 0 auto;
+      border-radius: 50%;
+      border: 5px solid var(--cream);
+      background: var(--forest-soft);
+      box-shadow: 0 0 0 8px rgba(35, 75, 45, 0.12);
+      position: relative;
+      z-index: 1;
+      cursor: pointer;
+      transition: transform 0.25s ease, background 0.25s ease;
+    }
+
+    .timeline-item:hover .timeline-dot,
+    .timeline-item:focus-within .timeline-dot {
+      transform: scale(1.15);
+      background: var(--oak-soft);
+    }
+
+    .timeline-year {
+      margin-top: 1rem;
+      font-weight: bold;
+      color: var(--oak);
+      font-size: 1rem;
+    }
+
+    .timeline-model {
+      margin-top: 0.3rem;
+      font-size: 1.04rem;
+      color: var(--forest);
+      font-weight: bold;
+    }
+
+    .timeline-card {
+      margin-top: 1rem;
+      background: linear-gradient(180deg, #fffaf2 0%, #efe2cc 100%);
+      border: 1px solid rgba(77, 54, 36, 0.2);
+      border-radius: 18px;
+      padding: 1rem;
+      min-height: 180px;
+      text-align: left;
+      opacity: 0.45;
+      transform: translateY(8px);
+      transition: opacity 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .timeline-item:hover .timeline-card,
+    .timeline-item:focus-within .timeline-card,
+    .timeline-item.active .timeline-card {
+      opacity: 1;
+      transform: translateY(0);
+      box-shadow: 0 12px 28px rgba(77, 54, 36, 0.15);
+    }
+
+    .timeline-card h3 {
+      margin: 0 0 0.6rem;
+      color: var(--forest);
+      font-size: 1.12rem;
+    }
+
+    .timeline-card p {
+      margin: 0;
+      line-height: 1.55;
+      font-size: 0.96rem;
+    }
+
+    .details-panel {
+      border-radius: 24px;
+      background:
+        linear-gradient(135deg, rgba(255, 250, 243, 0.97), rgba(242, 229, 205, 0.93));
+      border: 1px solid rgba(77, 54, 36, 0.16);
+      padding: 1.6rem;
+    }
+
+    .details-top {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.9rem;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .details-title {
+      margin: 0;
+      color: var(--forest);
+      font-size: clamp(1.8rem, 2.8vw, 2.4rem);
+    }
+
+    .details-badge {
+      background: var(--oak);
+      color: var(--white);
+      padding: 0.45rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.92rem;
+      letter-spacing: 0.02em;
+    }
+
+    .details-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .detail-card {
+      background: rgba(255, 255, 255, 0.65);
+      border-radius: 18px;
+      padding: 1rem 1.1rem;
+      border-left: 5px solid var(--forest-soft);
+    }
+
+    .detail-card h3 {
+      margin: 0 0 0.45rem;
+      color: var(--oak);
+      font-size: 1.02rem;
+    }
+
+    .detail-card p {
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    .details-summary {
+      margin: 0;
+      line-height: 1.75;
+      font-size: 1.03rem;
+    }
+
+    .footer {
+      margin-top: 1.7rem;
+      text-align: center;
+      background: linear-gradient(135deg, rgba(77, 54, 36, 0.96), rgba(35, 75, 45, 0.96));
+      color: var(--white);
+      border-radius: 20px;
+      padding: 1rem 1.2rem;
+      box-shadow: var(--shadow);
+      letter-spacing: 0.02em;
+    }
+
+    .rating-section {
+      margin-top: 1.7rem;
+      background:
+        linear-gradient(135deg, rgba(255, 252, 246, 0.95), rgba(237, 225, 200, 0.9));
+      border-radius: 24px;
+      padding: 1.6rem;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    .rating-section h2 {
+      margin: 0;
+      color: var(--forest);
+      font-size: 1.9rem;
+    }
+
+    .rating-section p {
+      margin: 0.7rem auto 0;
+      max-width: 660px;
+      line-height: 1.6;
+      color: #433428;
+    }
+
+    .stars {
+      margin-top: 1.2rem;
+      display: flex;
+      justify-content: center;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    .star-btn {
+      border: none;
+      background: transparent;
+      font-size: clamp(2rem, 5vw, 3rem);
+      cursor: pointer;
+      color: #b69c7c;
+      transition: transform 0.2s ease, color 0.2s ease, text-shadow 0.2s ease;
+      padding: 0.15rem 0.2rem;
+      line-height: 1;
+    }
+
+    .star-btn:hover,
+    .star-btn:focus-visible {
+      transform: translateY(-3px) scale(1.05);
+      color: #e0ad31;
+      text-shadow: 0 6px 16px rgba(224, 173, 49, 0.28);
+      outline: none;
+    }
+
+    .star-btn.active {
+      color: #f0b62e;
+      text-shadow: 0 6px 18px rgba(224, 173, 49, 0.36);
+    }
+
+    .rating-result {
+      margin-top: 1rem;
+      min-height: 1.8rem;
+      font-weight: bold;
+      color: var(--oak);
+    }
+
+    @media (max-width: 960px) {
+      .welcome-caption {
+        text-align: left;
+      }
+
+      .layout {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        border-radius: 0 0 24px 24px;
+      }
+
+      .sidebar.collapsed {
+        width: 100%;
+      }
+
+      .sidebar.collapsed .sidebar-copy,
+      .sidebar.collapsed .menu-text,
+      .sidebar.collapsed .sidebar-note {
+        display: block;
+      }
+
+      .sidebar.collapsed .sidebar-menu {
+        display: none;
+      }
+
+      .content {
+        padding: 1.25rem;
+      }
+
+      .details-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .hero,
+      .section,
+      .details-panel,
+      .footer {
+        border-radius: 18px;
+      }
+
+      .hero {
+        padding: 1.4rem;
+      }
+
+      .section,
+      .details-panel {
+        padding: 1.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section class="welcome-strip" aria-label="Bienvenida en varios idiomas">
+    <div class="welcome-inner">
+      <div>
+        <p class="welcome-label">Bienvenida</p>
+        <h2 class="welcome-word" id="welcomeWord">Hola</h2>
+      </div>
+      <p class="welcome-caption"></p>
+    </div>
+  </section>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-copy">
+          <h2 class="sidebar-title">Menu lateral</h2>
+          <p class="sidebar-subtitle">Pulsa un modelo para ver su explicacion completa.</p>
+        </div>
+        <button class="toggle-btn" id="toggleSidebar" aria-label="Plegar o desplegar menu">☰</button>
+      </div>
+
+      <nav class="sidebar-menu" id="modelMenu"></nav>
+
+      <div class="sidebar-note">
+        Recorre la linea temporal con el raton: al pasar por cada punto aparece una explicacion breve debajo.
+      </div>
+    </aside>
+
+    <main class="content">
+      <header class="hero">
+        <h1>Modelos atomicos</h1>
+        <p>
+          Esta pagina resume la evolucion de las ideas sobre el atomo, desde las primeras propuestas cientificas
+          hasta el modelo cuantico actual. Puedes explorar la linea temporal y abrir en el menu lateral la ficha
+          completa de cada modelo atomico.
+        </p>
+      </header>
+
+      <section class="section">
+        <h2>Linea temporal de los modelos atomicos</h2>
+        <p class="section-intro">
+          Mueve el raton por la linea para descubrir el año y una explicacion resumida de cada modelo. Si haces clic
+          sobre un punto o en el menu lateral, se abrira la informacion detallada de ese modelo.
+        </p>
+
+        <div class="timeline-wrap">
+          <div class="timeline">
+            <div class="timeline-grid" id="timeline"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Explicacion detallada</h2>
+        <div class="details-panel" id="detailsPanel">
+          <div class="details-top">
+            <h3 class="details-title" id="detailsTitle">Selecciona un modelo atomico</h3>
+            <span class="details-badge" id="detailsBadge">Historia de la ciencia</span>
+          </div>
+          <p class="details-summary" id="detailsSummary">
+            Pulsa cualquier opcion del menu lateral o un punto de la linea temporal para ver aqui la informacion ampliada.
+          </p>
+          <div class="details-grid">
+            <article class="detail-card">
+              <h3>Quien lo propuso</h3>
+              <p id="detailsAuthor">Aparecera el nombre del cientifico o cientificos relacionados con el modelo.</p>
+            </article>
+            <article class="detail-card">
+              <h3>Cuando surgio</h3>
+              <p id="detailsYear">Aparecera el año o periodo en el que se presento.</p>
+            </article>
+            <article class="detail-card">
+              <h3>Reaccion de la sociedad</h3>
+              <p id="detailsSociety">Se mostrara como fue recibido por la comunidad cientifica y por la sociedad.</p>
+            </article>
+            <article class="detail-card">
+              <h3>Impacto y legado</h3>
+              <p id="detailsImpact">Aqui se resumira la importancia del modelo y lo que cambio despues.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="rating-section" aria-labelledby="ratingTitle">
+        <h2 id="ratingTitle">Cuestionario de valoracion</h2>
+        <p>
+          Valora la pagina de 1 a 5 estrellas para indicar si te ha gustado. Pulsa una estrella y aparecerá tu puntuacion.
+        </p>
+        <div class="stars" id="ratingStars" role="radiogroup" aria-label="Valoracion de la pagina de 1 a 5 estrellas">
+          <button class="star-btn" type="button" data-value="1" aria-label="1 estrella">★</button>
+          <button class="star-btn" type="button" data-value="2" aria-label="2 estrellas">★</button>
+          <button class="star-btn" type="button" data-value="3" aria-label="3 estrellas">★</button>
+          <button class="star-btn" type="button" data-value="4" aria-label="4 estrellas">★</button>
+          <button class="star-btn" type="button" data-value="5" aria-label="5 estrellas">★</button>
+        </div>
+        <p class="rating-result" id="ratingResult">Todavia no se ha seleccionado ninguna puntuacion.</p>
+      </section>
+
+      <footer class="footer">
+        developer of the page: ACM developers &amp; cibersecurity.
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    const models = [
+      {
+        id: "dalton",
+        short: "Dalton",
+        year: "1803",
+        inventor: "John Dalton",
+        summary: "Propuso que la materia estaba formada por atomos indivisibles y que los de un mismo elemento eran iguales entre si.",
+        full: "El modelo de Dalton fue la primera teoria atomica moderna con base cientifica. Explicaba que la materia esta hecha de atomos, que los atomos de un mismo elemento son semejantes y que los compuestos se forman al unirse en proporciones fijas.",
+        society: "La comunidad cientifica lo recibio con interes porque ayudaba a explicar las leyes ponderales. Aunque todavia faltaban pruebas experimentales mas profundas, supuso un gran avance frente a ideas filosoficas anteriores.",
+        impact: "Sentó la base de la quimica moderna y permitio interpretar mejor las reacciones quimicas. A partir de el, los cientificos empezaron a estudiar la estructura interna del atomo."
+      },
+      {
+        id: "thomson",
+        short: "Thomson",
+        year: "1904",
+        inventor: "J. J. Thomson",
+        summary: "Descubrio el electron y planteo un atomo como una esfera positiva con electrones incrustados, parecido a un pudin de pasas.",
+        full: "Tras estudiar los rayos catodicos, Thomson demostro que dentro del atomo habia particulas negativas llamadas electrones. Su modelo decia que la carga positiva ocupaba casi todo el volumen atomico y que los electrones estaban repartidos en ella.",
+        society: "Fue muy importante porque rompia la idea de que el atomo era indivisible. La comunidad cientifica valoro mucho el descubrimiento del electron, aunque el modelo pronto quedo incompleto por nuevos experimentos.",
+        impact: "Abrió el camino al estudio de las particulas subatomicas y mostro que el atomo tenia estructura interna. Fue un paso esencial para los modelos posteriores."
+      },
+      {
+        id: "rutherford",
+        short: "Rutherford",
+        year: "1911",
+        inventor: "Ernest Rutherford",
+        summary: "Demostro que el atomo tiene un nucleo pequeño, denso y positivo, y que la mayor parte de su volumen es espacio vacio.",
+        full: "Gracias al experimento de la lamina de oro, Rutherford concluyo que casi toda la masa y la carga positiva del atomo estaban concentradas en un nucleo central. Los electrones giraban alrededor de ese nucleo.",
+        society: "Su propuesta sorprendio mucho porque cambiaba por completo la imagen del atomo. Fue aceptada con rapidez en la ciencia al apoyarse en resultados experimentales muy solidos.",
+        impact: "Nacio el modelo nuclear del atomo y se explico por que algunas particulas atravesaban la materia y otras rebotaban. Aun asi, el modelo no explicaba bien la estabilidad de los electrones."
+      },
+      {
+        id: "bohr",
+        short: "Bohr",
+        year: "1913",
+        inventor: "Niels Bohr",
+        summary: "Planteo que los electrones se mueven en orbitas fijas con energias concretas y que al saltar entre ellas emiten o absorben energia.",
+        full: "Bohr mejoro el modelo de Rutherford proponiendo niveles de energia cuantizados. Los electrones no podian moverse en cualquier orbita, sino solo en determinadas trayectorias permitidas alrededor del nucleo.",
+        society: "Tuvo una gran acogida porque explicaba el espectro del hidrogeno, algo que otros modelos no conseguian. Fue visto como una solucion elegante y muy util en la epoca.",
+        impact: "Introdujo las ideas cuanticas en la estructura atomica y acerco la fisica clasica a la nueva fisica cuantica. Fue esencial para el desarrollo posterior de la mecanica cuantica."
+      },
+      {
+        id: "sommerfeld",
+        short: "Sommerfeld",
+        year: "1916",
+        inventor: "Arnold Sommerfeld",
+        summary: "Amplio el modelo de Bohr proponiendo orbitas elipticas y subniveles energeticos para explicar mejor los espectros atomicos.",
+        full: "Sommerfeld refinó la teoria de Bohr al añadir orbitas circulares y elipticas, asi como correcciones relativistas. De este modo se podian explicar detalles finos que antes quedaban fuera.",
+        society: "Fue bien recibido dentro de la fisica teorica porque resolvia algunos problemas del modelo de Bohr. Sin embargo, tambien mostro que hacia falta una teoria todavia mas profunda.",
+        impact: "Sirvio como puente entre el modelo planetario y la mecanica cuantica moderna. Ayudo a entender que la energia de los electrones era mas compleja de lo que parecia."
+      },
+      {
+        id: "quantum",
+        short: "Modelo cuantico",
+        year: "1926",
+        inventor: "Erwin Schrodinger y Werner Heisenberg",
+        summary: "Sustituyo las orbitas fijas por orbitales, regiones de probabilidad donde es mas facil encontrar al electron.",
+        full: "El modelo mecanico-cuantico describe el comportamiento del electron mediante funciones de onda y probabilidades. Ya no se habla de trayectorias exactas, sino de orbitales y niveles de energia definidos por numeros cuanticos.",
+        society: "Al principio fue dificil de entender por su complejidad matematica y por romper con la intuicion clasica. Aun asi, se convirtió en la base de la fisica y la quimica modernas.",
+        impact: "Es el modelo actual para explicar la estructura atomica, los enlaces quimicos y gran parte de la tecnologia moderna. Gracias a el se entienden mejor materiales, reacciones y dispositivos electronicos."
+      }
+    ];
+
+    const timeline = document.getElementById("timeline");
+    const menu = document.getElementById("modelMenu");
+    const sidebar = document.getElementById("sidebar");
+    const toggleSidebar = document.getElementById("toggleSidebar");
+
+    const detailsTitle = document.getElementById("detailsTitle");
+    const detailsBadge = document.getElementById("detailsBadge");
+    const detailsSummary = document.getElementById("detailsSummary");
+    const detailsAuthor = document.getElementById("detailsAuthor");
+    const detailsYear = document.getElementById("detailsYear");
+    const detailsSociety = document.getElementById("detailsSociety");
+    const detailsImpact = document.getElementById("detailsImpact");
+    const welcomeWord = document.getElementById("welcomeWord");
+    const ratingButtons = document.querySelectorAll(".star-btn");
+    const ratingResult = document.getElementById("ratingResult");
+
+    const greetings = [
+      "Hola",
+      "Hello",
+      "Bonjour",
+      "Ciao",
+      "Hallo",
+      "Ola",
+      "Merhaba",
+      "Aloha",
+      "Namaste",
+      "Salaam"
+    ];
+
+    let greetingIndex = 0;
+
+    function renderMenu() {
+      models.forEach((model, index) => {
+        const button = document.createElement("button");
+        button.className = "menu-button";
+        button.dataset.model = model.id;
+        button.innerHTML = `
+          <span class="menu-index">${index + 1}</span>
+          <span class="menu-text">${model.short}</span>
+        `;
+        button.addEventListener("click", () => selectModel(model.id));
+        menu.appendChild(button);
+      });
+    }
+
+    function renderTimeline() {
+      models.forEach((model) => {
+        const item = document.createElement("article");
+        item.className = "timeline-item";
+        item.dataset.model = model.id;
+        item.innerHTML = `
+          <button class="timeline-dot" aria-label="Ver ${model.short}"></button>
+          <div class="timeline-year">${model.year}</div>
+          <div class="timeline-model">${model.short}</div>
+          <div class="timeline-card">
+            <h3>${model.short}</h3>
+            <p><strong>Año:</strong> ${model.year}. ${model.summary}</p>
+          </div>
+        `;
+
+        item.querySelector(".timeline-dot").addEventListener("click", () => selectModel(model.id));
+        item.addEventListener("mouseenter", () => activateTimeline(model.id));
+        item.addEventListener("focusin", () => activateTimeline(model.id));
+        timeline.appendChild(item);
+      });
+    }
+
+    function activateTimeline(modelId) {
+      document.querySelectorAll(".timeline-item").forEach((item) => {
+        item.classList.toggle("active", item.dataset.model === modelId);
+      });
+    }
+
+    function selectModel(modelId) {
+      const model = models.find((entry) => entry.id === modelId);
+      if (!model) return;
+
+      activateTimeline(modelId);
+
+      document.querySelectorAll(".menu-button").forEach((button) => {
+        button.classList.toggle("active", button.dataset.model === modelId);
+      });
+
+      detailsTitle.textContent = model.short;
+      detailsBadge.textContent = `Modelo presentado en ${model.year}`;
+      detailsSummary.textContent = model.full;
+      detailsAuthor.textContent = model.inventor;
+      detailsYear.textContent = model.year;
+      detailsSociety.textContent = model.society;
+      detailsImpact.textContent = model.impact;
+
+      document.getElementById("detailsPanel").scrollIntoView({
+        behavior: "smooth",
+        block: "nearest"
+      });
+    }
+
+    function rotateGreeting() {
+      welcomeWord.classList.add("changing");
+
+      setTimeout(() => {
+        greetingIndex = (greetingIndex + 1) % greetings.length;
+        welcomeWord.textContent = greetings[greetingIndex];
+        welcomeWord.classList.remove("changing");
+      }, 800);
+    }
+
+    function setRating(value) {
+      ratingButtons.forEach((button) => {
+        const isActive = Number(button.dataset.value) <= value;
+        button.classList.toggle("active", isActive);
+        button.setAttribute("aria-checked", String(Number(button.dataset.value) === value));
+      });
+
+      const labels = {
+        1: "1 estrella: la pagina necesita muchos cambios.",
+        2: "2 estrellas: hay algunas cosas buenas, pero se puede mejorar bastante.",
+        3: "3 estrellas: la pagina esta bien y cumple su funcion.",
+        4: "4 estrellas: la pagina gusta mucho y esta muy conseguida.",
+        5: "5 estrellas: la pagina ha encantado."
+      };
+
+      ratingResult.textContent = labels[value];
+    }
+
+    toggleSidebar.addEventListener("click", () => {
+      sidebar.classList.toggle("collapsed");
+    });
+
+    ratingButtons.forEach((button) => {
+      button.addEventListener("click", () => setRating(Number(button.dataset.value)));
+    });
+
+    renderMenu();
+    renderTimeline();
+    selectModel("dalton");
+    setInterval(rotateGreeting, 6000);
+  </script>
+</body>
+</html>
